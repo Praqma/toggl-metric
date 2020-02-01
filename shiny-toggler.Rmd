@@ -1,0 +1,127 @@
+---
+title: "shiny-toggler"
+author: "bosse"
+date: "1/27/2020"
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r libraries, include = FALSE}
+# default value for ref in master, but can be any branch or tag
+devtools::install_github('Praqma/toggleR', ref = 'master')
+library(toggleR)
+# Load tidyverse to get more methods to handle the data
+library(tidyverse)
+```
+
+```{r environment, include = FALSE}
+# Check if the needed environment variables are set
+# .Renviron for Rstudio
+# .bashrc for R CMD
+workspace <- Sys.getenv("TOGGL_WORKSPACE")
+if (is.element("", workspace)) {
+  stop("TOGGL_WORKSPACE is not a correct environment variable")
+}
+token <- Sys.getenv("TOGGL_TOKEN")
+if (is.element("", token)) {
+  stop("TOGGL_TOKEN needs to set as an environment variable")
+}
+```
+
+
+```{r groups, echo = FALSE}
+# get the accessable groups in the workspace
+groups <- as_tibble(get.toggl.groups(token, workspace))
+```
+
+To learn more, see [Interactive Documents](http://rmarkdown.rstudio.com/authoring_shiny.html).
+
+
+### Select the group 
+
+```{r input, echo=FALSE}
+inputPanel(
+  selectInput("group.name", label = "Group Name: ", choices = c("", groups$name), selected = NA),
+  selectInput("weeks", label = "Wanted Interval [weeks]", choices = c(1,2,3,4), selected = 1),
+  sliderInput("fulltime", label = "Working hours per week", min = 35.0, max = 45.0, value = 40.0, step = 0.5, round = FALSE)
+)
+
+```
+
+### Recorded time in toggl
+
+```{r, echo=FALSE}
+renderPlot({
+  if (input$group.name != "") {
+    group.name <- input$group.name
+    group.id <- groups[groups$name == group.name, ]$id
+    working.days <- as.numeric(input$weeks) * 5
+    print(paste("Fetching detail data for", group.name, "with group Id:", group.id))
+
+    group.detail.1w <- as_tibble(get.toggl.group.data(token, workspace, group.id, since = Sys.Date() - (as.numeric(input$weeks) * 7 - 1), verbose = TRUE))
+    print(paste("Response is a table with", length(group.detail.1w), "columns and", length(group.detail.1w$id), "entries"))
+
+    group.detail.1w <- group.detail.1w %>%
+      dplyr::mutate(
+      duration = dur/(60*60*1000),
+      date = as.Date(start)
+    )
+
+  day.data <- group.detail.1w %>%
+    dplyr::group_by(user, date) %>%
+    dplyr::summarise(
+      hours = sum(duration)
+    ) %>%
+    dplyr::mutate(
+      day = strftime(date,"%A"),
+      sum = cumsum(as.numeric(hours))
+    )
+
+  wday.colors <- c("Monday" = "grey",
+                 "Tuesday" = "grey",
+                 "Wednesday" = "grey",
+                 "Thursday" = "grey",
+                 "Friday" = "grey",
+                 "Saturday" = "red",
+                 "Sunday" = "red")
+
+  seven.days <- ggplot(day.data, aes(x = date, y = hours)) + 
+    geom_hline(yintercept = input$fulltime/5, color = "blue")
+  if (working.days == 10 || working.days == 20) {
+    seven.days <- seven.days + 
+      geom_hline(yintercept = input$fulltime/10, color = "blue")
+  }
+  if (working.days == 15) {
+    seven.days <- seven.days + 
+      geom_hline(yintercept = input$fulltime/15, color = "blue") +
+      geom_hline(yintercept = 2*input$fulltime/15, color = "blue")
+  }
+  if (working.days == 20) {
+    seven.days <- seven.days + 
+      geom_hline(yintercept = input$fulltime/20, color = "blue") +
+      geom_hline(yintercept = 3*input$fulltime/20, color = "blue")
+  }
+  seven.days <- seven.days + geom_col(aes(fill = day), show.legend = FALSE) +
+    geom_step(aes(y = sum / working.days), direction = "vh", color = "Blue", size = 2) +
+    facet_wrap(~user, ncol = max(2, round(length(levels(factor(day.data$user))))/5)) +
+    scale_fill_manual(values = wday.colors) +
+    scale_y_continuous(name = "Hours/day",
+                       breaks = c(0,2,4,6,8,10),
+                       sec.axis = sec_axis(~ . * working.days, name = "Total Hours")) +
+    labs(title = group.name) +
+    theme(
+      axis.text.x = element_text(size = 6, angle = 45, hjust = 1),
+      axis.title.y = element_text(color = "grey"),
+      axis.title.y.right = element_text(color = "blue"))
+  
+  plot(seven.days)
+  }
+}, outputArgs = list(width = "100%")
+)
+
+```
+

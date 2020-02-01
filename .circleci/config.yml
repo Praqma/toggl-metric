@@ -1,0 +1,12 @@
+version: 2
+jobs:
+  build:
+    machine: true
+
+    steps:
+      - checkout:
+
+      - run:
+          name: Build
+          command: docker run -v $PWD:/toggleR -w /toggleR --env TOGGL_TOKEN --env TOGGL_WORKSPACE praqma/toggler:0.2.2.5 Rscript use-toggler.R
+
