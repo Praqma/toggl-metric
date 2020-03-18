@@ -91,7 +91,7 @@ seven.days <- ggplot(day.data, aes(x = date, y = hours)) +
 
 plot(seven.days)
 
-png(paste(group.name,".png", sep = ""), width = 5000, height = 3000, res = 550, pointsize = 10)
+png(paste("img/", group.name, ".png", sep = ""), width = 5000, height = 3000, res = 550, pointsize = 10)
 plot(seven.days)
 dev.off()
 }

@@ -10,3 +10,6 @@ jobs:
           name: Build
           command: docker run -v $PWD:/toggleR -w /toggleR --env TOGGL_TOKEN --env TOGGL_WORKSPACE praqma/toggler:0.2.2.5 Rscript use-toggler.R
 
+      - store_artifacts:
+          path: img
+
