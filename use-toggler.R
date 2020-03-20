@@ -83,6 +83,7 @@ seven.days <- ggplot(day.data, aes(x = date, y = hours)) +
   scale_y_continuous(name = "Hours/day",
                      breaks = c(0,2,4,6,8,10),
                      sec.axis = sec_axis(~ . * weekds.since.the.first, name = "Hours this month")) +
+  scale_x_date(name = NULL) +
   labs(title = group.name) +
   theme(
     axis.text.x = element_text(size = 6, angle = 45, hjust = 1),
