@@ -75,8 +75,10 @@ wday.colors <- c("Monday" = "grey",
 
 seven.days <- ggplot(day.data, aes(x = date, y = hours)) +
   geom_col(aes(fill = day), show.legend = FALSE) +
-  geom_step(aes(y = sum/weekds.since.the.first), direction = "vh", color = "Blue", size = 2) +
-  facet_wrap(~user, ncol = max(2, round(length(levels(factor(day.data$user))))/5)) +
+  geom_step(aes(y = sum/weekds.since.the.first), direction = "vh", color = "Blue", size = 1.5) +
+  facet_wrap(~user,
+             switch = "x",
+             ncol = max(2, round(length(levels(factor(day.data$user))))/5)) +
   scale_fill_manual(values = wday.colors) +
   scale_y_continuous(name = "Hours/day",
                      breaks = c(0,2,4,6,8,10),
@@ -87,7 +89,10 @@ seven.days <- ggplot(day.data, aes(x = date, y = hours)) +
     axis.title.y = element_text(color = "grey"),
     axis.title.y.right = element_text(color = "blue"),
     axis.text.y.left = element_text(color = "grey"),
-    axis.text.y.right = element_text(color = "blue"))
+    axis.text.y.right = element_text(color = "blue"),
+    strip.text.x = element_text(margin = margin(2, 0, 2, 0), size = rel(0.6)),
+    strip.switch.pad.wrap = unit(0.0, "cm")
+    )
 
 plot(seven.days)
 
