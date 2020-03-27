@@ -1,5 +1,7 @@
 # Generated Images
 *.png
+*.html
+*.pdf
 
 # History files
 .Rhistory
