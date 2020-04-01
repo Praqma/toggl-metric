@@ -15,7 +15,7 @@ jobs:
           command: ./html.sh
 
       - store_artifacts:
-          path: img
+          path: this-month
 
 workflows:
   version: 2

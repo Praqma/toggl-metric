@@ -1,6 +1,7 @@
 #!/bin/bash
 
-cd img
+imgdir="this-month"
+cd $imgdir
 
 file="toggl-metric.html"
 
@@ -14,7 +15,7 @@ cat >$file <<EOF
 EOF
 
 for i in $(ls *.png); do
-  echo "<img src=\"$i\" width=\"100%\">" >> $file
+  echo "<$imgdir src=\"$i\" width=\"100%\">" >> $file
 done
 
 cat >>$file <<EOF
