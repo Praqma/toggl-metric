@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r libraries, include = FALSE}
 # default value for ref in master, but can be any branch or tag
-devtools::install_github('Praqma/toggleR', ref = 'master')
+devtools::install_github('drBosse/toggleR', ref = 'master')
 library(toggleR)
 # Load tidyverse to get more methods to handle the data
 library(tidyverse)
@@ -65,15 +65,18 @@ renderPlot({
     group.id <- groups[groups$name == group.name, ]$id
     print(paste("Fetching detail data for", group.name, "with group Id:", group.id))
 
-    group.detail.1w <- as_tibble(get.toggl.group.data(token, workspace, group.id, since = Sys.Date() - (as.numeric(input$weeks) * 7 - 1), verbose = TRUE))
-    print(paste("Response is a table with", length(group.detail.1w), "columns and", length(group.detail.1w$id), "entries"))
+    group.detail.data <- as_tibble(get.toggl.group.data(token, workspace, group.id, since = Sys.Date() - (as.numeric(input$weeks) * 7 - 1), verbose = TRUE))
+    print(paste("Response is a table with", length(group.detail.data), "columns and", length(group.detail.data$id), "entries"))
 
-    group.detail.1w <- convert.duration.to.hours(group.detail.1w)
+    if (length(group.detail.data) > 0) {
+      group.detail.data <- convert.duration.to.hours(group.detail.data)
+      day.data <- bin.data.by.day(group.detail.data)
 
-    day.data <- bin.data.by.day(group.detail.1w)
-
-    selected.weeks <- selected.weeks.plot(day.data, input$weeks, group.name, wday.colors, input$fulltime)
-    plot(selected.weeks)
+      selected.weeks <- selected.weeks.plot(day.data, input$weeks, group.name, wday.colors, input$fulltime)
+      plot(selected.weeks)
+    } else {
+      plot(empty.data.plot(paste("No time entries reported\nfor the ", group.name, " group\nin the wanted interval", sep = "")))
+    }
   }
 }, outputArgs = list(width = "100%")
 )
