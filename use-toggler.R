@@ -6,7 +6,7 @@ library(devtools)
 # Better to get the source from github, since CI builds all commits
 #
 # default value for ref in master, but can be any branch or tag
-devtools::install_github('Praqma/toggleR', ref = 'master')
+devtools::install_github('drBosse/toggleR', ref = 'master')
 library(toggleR)
 # Load tidyverse to get more methods to handle the data
 library(tidyverse)
@@ -53,12 +53,20 @@ for (i in 1:number.of.groups) {
   detailed.data.this.month <- as_tibble(get.toggl.group.data(token, workspace, group.id, since = Sys.Date() - days.since.the.first, verbose = TRUE))
   print(paste("Response is a table with", length(detailed.data.this.month), "columns and", length(detailed.data.this.month$id), "entries"))
 
-  detailed.data.this.month <- convert.duration.to.hours(detailed.data.this.month)
+  if (length(detailed.data.this.month) > 0) {
+    detailed.data.this.month <- convert.duration.to.hours(detailed.data.this.month)
 
-  day.data <- bin.data.by.day(detailed.data.this.month)
+    day.data <- bin.data.by.day(detailed.data.this.month)
 
-  this.month <- this.month.day.plot(day.data, group.name, wday.colors, days.since.the.first)
-  plot(this.month)
+    this.month <- this.month.day.plot(day.data, group.name, wday.colors, days.since.the.first)
+    plot(this.month)
+  } else {
+    plot(
+      empty.data.plot(
+        paste("No time reported\nfor the ", 
+        group.name, 
+        " office\nthis month", sep = "")))
+  }
 
   png(paste(img.dir, "/", group.name, ".png", sep = ""), width = 5000, height = 3000, res = 550, pointsize = 10)
   plot(this.month)

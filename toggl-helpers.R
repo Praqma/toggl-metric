@@ -103,4 +103,24 @@ selected.weeks.plot <- function(data, weeks, name, colors, fulltime) {
   return(this.plot)
 }
 
+empty.data.plot <- function(message = "") {
+  if (message != "") {
+    text = message
+  } else {
+    text = paste("\n   There is nothing to see here\n",
+                 "       \n",
+                 "       Move on")
+  }
+  this.plot <- ggplot() +
+    annotate("text", x = 4, y = 25, size = 8, label = text, color = "Red") +
+    theme(panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.text.x = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks = element_blank()) +
+    labs(x = NULL, y = NULL)
+
+  return(this.plot)
+}
+
 
