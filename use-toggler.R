@@ -59,14 +59,13 @@ for (i in 1:number.of.groups) {
     day.data <- bin.data.by.day(detailed.data.this.month)
 
     this.month <- this.month.day.plot(day.data, group.name, wday.colors, days.since.the.first)
-    plot(this.month)
   } else {
-    plot(
-      empty.data.plot(
-        paste("No time reported\nfor the ", 
-        group.name, 
-        " office\nthis month", sep = "")))
+    this.month <- empty.data.plot(
+        paste("No time reported\nfor the ",
+        group.name,
+        " office\nthis month", sep = ""))
   }
+  plot(this.month)
 
   png(paste(img.dir, "/", group.name, ".png", sep = ""), width = 5000, height = 3000, res = 550, pointsize = 10)
   plot(this.month)
