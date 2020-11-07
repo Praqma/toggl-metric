@@ -17,6 +17,9 @@ jobs:
       - store_artifacts:
           path: this-month
 
+      - store_artifacts:
+          path: last-month
+
 workflows:
   version: 2
   commit:

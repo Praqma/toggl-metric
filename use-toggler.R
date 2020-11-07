@@ -26,9 +26,13 @@ if (is.element("", token)) {
 source('toggl-helpers.R')
 
 # The directory for the generated images
-img.dir <- "this-month"
-if (!dir.exists(img.dir)) {
-  dir.create(img.dir)
+this.dir <- "this-month"
+if (!dir.exists(this.dir)) {
+  dir.create(this.dir)
+}
+last.dir <- "last-month"
+if (!dir.exists(last.dir)) {
+  dir.create(last.dir)
 }
 
 
@@ -41,7 +45,35 @@ if (!number.of.groups > 0) {
   stop("Did not find any groups for the workspace")
 }
 
-days.since.the.first <- as.numeric(strsplit(as.character(Sys.Date()), split = '-')[[1]][3]) - 1
+this.date <- strsplit(as.character(Sys.Date()), split = '-')[[1]]
+this.year <- as.numeric(this.date[1])
+this.month <- as.numeric(this.date[2])
+this.day <- as.numeric(this.date[3])
+
+last.year <- this.year
+if (this.month == 1) {
+  last.month <- 12
+  last.year <- last.year -1
+} else {
+  last.month <- this.month -1
+}
+last.start <- as.Date(paste(last.year, "-", last.month, "-", "1", sep = ''))
+
+if ( last.month %in% c(1,3,5,7,9,11) ) {
+  last.lenght <- 31
+} else if ( last.month %in% c(4,6,8,10,12) ) {
+  last.lenght <- 30
+} else if ( last.month == 2 ) {
+  if ( last.year %% 4 == 0 ) {
+    last.lenght <- 29
+  } else {
+    last.lenght <- 28
+  }
+}
+
+last.stop <- as.Date(paste(last.year, "-", last.month, "-", last.lenght, sep = ''))
+
+days.since.the.first <- as.numeric(this.date[3]) - 1
 
 print(paste("Found", number.of.groups, "groups for that workspace"))
 for (i in 1:number.of.groups) {
@@ -50,6 +82,7 @@ for (i in 1:number.of.groups) {
   group.id <- groups[groups$name == group.name, ]$id
   print(paste("Fetching detail data for", group.name, "with group Id:", group.id))
 
+  # current month
   detailed.data.this.month <- as_tibble(get.toggl.group.data(token, workspace, group.id, since = Sys.Date() - days.since.the.first, verbose = TRUE))
   print(paste("Response is a table with", length(detailed.data.this.month), "columns and", length(detailed.data.this.month$id), "entries"))
 
@@ -58,17 +91,40 @@ for (i in 1:number.of.groups) {
 
     day.data <- bin.data.by.day(detailed.data.this.month)
 
-    this.month <- this.month.day.plot(day.data, group.name, wday.colors, days.since.the.first)
+    this.month.plot <- this.month.day.plot(day.data, group.name, wday.colors, days.since.the.first)
   } else {
-    this.month <- empty.data.plot(
+    this.month.plot <- empty.data.plot(
         paste("No time reported\nfor the ",
         group.name,
         " office\nthis month", sep = ""))
   }
-  plot(this.month)
+  plot(this.month.plot)
 
-  png(paste(img.dir, "/", group.name, ".png", sep = ""), width = 5000, height = 3000, res = 550, pointsize = 10)
-  plot(this.month)
+  # last month
+  detailed.data.last.month <- as_tibble(get.toggl.group.data(token, workspace, group.id, since = last.start, until = last.stop, verbose = TRUE))
+  print(paste("Response is a table with", length(detailed.data.last.month), "columns and", length(detailed.data.last.month$id), "entries"))
+
+  if (length(detailed.data.last.month) > 0) {
+    detailed.data.last.month <- convert.duration.to.hours(detailed.data.last.month)
+
+    day.data <- bin.data.by.day(detailed.data.last.month)
+
+    last.month.plot <- this.month.day.plot(day.data, group.name, wday.colors, last.lenght)
+  } else {
+    last.month.plot <- empty.data.plot(
+      paste("No time reported\nfor the ",
+            group.name,
+            " office\nthis month", sep = ""))
+  }
+  plot(last.month.plot)
+
+
+  png(paste(this.dir, "/", group.name, ".png", sep = ""), width = 5000, height = 3000, res = 550, pointsize = 10)
+  plot(this.month.plot)
+  dev.off()
+
+  png(paste(last.dir, "/", group.name, ".png", sep = ""), width = 5000, height = 3000, res = 550, pointsize = 10)
+  plot(last.month.plot)
   dev.off()
 }
 
